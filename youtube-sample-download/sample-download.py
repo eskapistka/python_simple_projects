@@ -1,7 +1,7 @@
 from pytube import YouTube
 from moviepy.editor import *
 from pathvalidate import sanitize_filepath
-
+import sys, os
 
 # This script is supposed to make downloading samples from youtube easier
 # ('sample' as in a short music loop that is used in beat-making)
@@ -10,6 +10,11 @@ from pathvalidate import sanitize_filepath
 # end time in the specified video
 
 # It outputs a .mp3 file with a name inputted by a user and previously specified length
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 def user_input():
     # Get URL
@@ -59,13 +64,13 @@ def download_and_process(url, file_name, start_time, end_time):
     temp_file = file_name
 
     # Convert the downloaded video into a trimmed audio clip
-    sample_video = VideoFileClip(f'{temp_file}.mp4')
+    sample_video = VideoFileClip( resource_path(f'{temp_file}.mp4') )
     audioclip = sample_video.audio
     # Invalid (too big) end time handling
     if audioclip.duration < end_time:
         end_time = audioclip.duration
     sample_video.close
-    audioclip.subclip(start_time, end_time).write_audiofile(f'{file_name}.mp3')
+    audioclip.subclip(start_time, end_time).write_audiofile( resource_path(f'{file_name}.mp3')  )
 
     # Deleting unused objects so the temporary .mp4 file can be deleted
     del sample_video.reader, sample_video, audioclip.reader, audioclip
@@ -75,7 +80,7 @@ def download_and_process(url, file_name, start_time, end_time):
 
 def remove_temp(temp_file):
     # Deleting the original video (temporary file) after conversion
-    os.remove(f'{temp_file}.mp4')
+    os.remove( resource_path(f'{temp_file}.mp4') )
 
 
 def main():
